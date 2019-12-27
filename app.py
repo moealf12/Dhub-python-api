@@ -57,33 +57,6 @@ def hellos():
     else:
         return jsonify({"Error":"User name not Found"})
 
-@app.route('/views/count/<username>',methods=['GET'])
-def get_views(username):
-    users = []
-    views = []
-    view_name = []
-    sorted_resp = {}
-    resp_reduce = {}
-    lookup = requests.get(f'http://dhubs.herokuapp.com/shop/{username}').text
-    result = BeautifulSoup(lookup,'html5lib')
-    result = result.prettify().strip(result.prettify()[1:30])
-    result = json.dumps(result,ensure_ascii=False,sort_keys=True)
-    result = json.loads(result)
-    with open(f'{username}.json','w') as e :
-        e.write(result)
-    with open(f'{username}.json','r') as json_file:
-        data = json.load(json_file)
-        for i in data :
-            views.append(i['Views'])
-
-    for i in views[0]:
-        view_name.append(i['itemname'])
-
-    my_dict = {i:view_name.count(i) for i in view_name}
-    print(my_dict)
-
-
-    return my_dict
 
 
 
