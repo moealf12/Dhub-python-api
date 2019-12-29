@@ -89,12 +89,12 @@ def get_views(username):
 
 @app.route('/item/advisor/<itemname>',methods=['GET'])
 def get_advisor(itemname):
-    class shoping_adv:
+    class shoping_adv_sooq:
         def __init__(self,link):
             self.link = link
 
 
-        def get_inf(self):
+        def get_inf_sooq(self):
             self.temp = []
             self.temp_price = []
             self.temp_img = []
@@ -124,18 +124,84 @@ def get_advisor(itemname):
 
 
 
+    class shoping_adv_jolly :
+        def __init__(self,link):
+            self.link = link
+        def get_inf_jolly(self):
+            self.temp_name_jolly = []
+            self.temp_price_jolly = []
+            self.temp_img_jolly = []
+            self.target = requests.get(self.link).text
+            self.jolly_name = BeautifulSoup(self.target,'html5lib').find_all("h4" , {"class":"pro_list_msg_1"})
+            self.jolly_price = BeautifulSoup(self.target,'html5lib').find_all("div" , {"class":"pro_list_price_1 categoryTwo-loveBox"})
+            self.jolly_img = BeautifulSoup(self.target,'html5lib').find_all("img" , {"class":"J-lazy-load firstImg"})
+
+
+
+            for i in range(len(self.jolly_name)):
+                clean_result = self.jolly_name[i].text
+                self.temp_name_jolly.append(clean_result)
+
+            for i in range(len(self.jolly_price)):
+                clean_result = self.jolly_price[i].text
+                self.temp_price_jolly.append(clean_result)
+
+
+            for i in range(len(self.jolly_img)):
+                clean_result = self.jolly_img[i]['data-original']
+                self.temp_img_jolly.append(clean_result)
+
+
+
+            return {'item name':self.temp_name_jolly[0],'item price':self.temp_price_jolly[0],'item img':self.temp_img_jolly[0]}
+
+    class shoping_adv_noon:
+        def __init__(self,link):
+            self.link = link
+
+        def get_inf_noon(self):
+            self.temp_name_jolly = []
+            self.temp_price_jolly = []
+            self.temp_img_jolly = []
+            self.target = requests.get(self.link).text
+            self.jolly_name = BeautifulSoup(self.target,'html5lib').find_all("p" , {"class":"jsx-3152181095 productContainer"})
+            self.jolly_price = BeautifulSoup(self.target,'html5lib').find_all("span" , {"class":"value"})
+            self.jolly_img = BeautifulSoup(self.target,'html5lib').find_all("div" , {"class":"jsx-2714670158 mediaContainer"})
+
+
+
+
+            for i in range(len(self.jolly_name)):
+                clean_result = self.jolly_name[i].text
+                self.temp_name_jolly.append(clean_result)
+
+            for i in range(len(self.jolly_price)):
+                clean_result = self.jolly_price[i].text
+                self.temp_price_jolly.append(clean_result)
+
+
+            for i in range(len(self.jolly_img)):
+                clean_result = self.jolly_img[i].find('img')['src']
+                self.temp_img_jolly.append(clean_result)
+
+
+            return {'item name':self.temp_name_jolly[0],'item price':self.temp_price_jolly[0],'item img':self.temp_img_jolly[0]}
+
+
 
 
 
 
     try:
-        new_adv = shoping_adv('https://saudi.souq.com/sa-en/'+itemname+'/s/?as=1').get_inf()
+        new_adv = {'sooq':shoping_adv_sooq('https://saudi.souq.com/sa-en/'+itemname+'/s/?as=1').get_inf_sooq(),"jollychic":shoping_adv_jolly('https://www.jollychic.com/s/'+itemname+'?jsort=0111-120&q='+itemname).get_inf_jolly(),'noon':shoping_adv_noon('https://www.noon.com/saudi-ar/search?q='+itemname).get_inf_noon()}
         return {'result':new_adv}
     except Exception as e :
-        return {'error':f'Cant finde {e}'}
+        new_adv = {'sooq':shoping_adv_sooq('https://saudi.souq.com/sa-en/'+itemname+'/s/?as=1').get_inf_sooq(),"jollychic":shoping_adv_jolly('https://www.jollychic.com/s/'+itemname+'?jsort=0111-120&q='+itemname).get_inf_jolly()}
+        return {'result':new_adv}
 
 
 
 
 if __name__ == '__main__':
     app.run(debug=True,threaded=True, port=5000)
+
