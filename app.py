@@ -42,6 +42,20 @@ def landepage():
 
     return sorted_resp
 
+@app.route('/say',methods=['POST'])
+def hellos():
+
+    name = request.json['name']
+    students = {'ahme':20,'majed':2,'abood':3}
+    for i in students.keys() :
+        if i == name :
+            print(i,students[i])
+            if students[i] == 0 :
+                return jsonify({"hello":f'hello {i} your score is {students[i]}'})
+            else:
+                return jsonify({"hello":f'hello {i} your score is {students[i]}'})
+    else:
+        return jsonify({"Error":"User name not Found"})
 
 @app.route('/views/count/<username>',methods=['GET'])
 def get_views(username):
@@ -71,28 +85,57 @@ def get_views(username):
 
     return my_dict
 
-@app.route('/say',methods=['POST'])
-def hellos():
-
-    name = request.json['name']
-    students = {'ahme':20,'majed':2,'abood':3}
-    for i in students.keys() :
-        if i == name :
-            print(i,students[i])
-            if students[i] == 0 :
-                return jsonify({"hello":f'hello {i} your score is {students[i]}'})
-            else:
-                return jsonify({"hello":f'hello {i} your score is {students[i]}'})
-    else:
-        return jsonify({"Error":"User name not Found"})
-   
-
-    
 
 
+@app.route('/item/advisor/<itemname>',methods=['GET'])
+def get_advisor(itemname):
+    class shoping_adv:
+        def __init__(self,link):
+            self.link = link
+
+
+        def get_inf(self):
+            self.temp = []
+            self.temp_price = []
+            self.temp_img = []
+            self.target = requests.get(self.link).text
+            self.target_name = BeautifulSoup(self.target,'html5lib').findAll("h6", {"class":"title itemTitle"})
+            self.target_price = BeautifulSoup(self.target,'html5lib').findAll("span", {"class":"itemPrice"})
+            self.target_img = BeautifulSoup(self.target,'html5lib').findAll("img", {"class":"img-size-medium"})
+
+            for i in range(len(self.target_name)):
+                clean_result = self.target_name[i].text
+                self.temp.append(clean_result)
+
+            for i in range(len(self.target_price)):
+                clean_result = self.target_price[i].text
+                self.temp_price.append(clean_result)
+
+            for i in range(len(self.target_img)):
+                clean_result = self.target_img[i]['src']
+                self.temp_img.append(clean_result)
+
+
+
+
+            for i in range(len(self.temp)):
+                self.temp[i][0].replace('\n\n\t\n \n \n \n\n','')
+            return {"item name":self.temp[0].strip('31 % off Quick View').replace('Quick View',''),"item price":self.temp_price[0],"itemimg":self.temp_img[0]}
+
+
+
+
+
+
+
+    try:
+        new_adv = shoping_adv('https://saudi.souq.com/sa-en/'+itemname+'/s/?as=1').get_inf()
+        return {'result':new_adv}
+    except Exception as e :
+        return {'error':f'Cant finde {e}'}
 
 
 
 
 if __name__ == '__main__':
-    app.run(threaded=True, port=5000)
+    app.run(debug=True,threaded=True, port=5000)
