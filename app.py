@@ -94,6 +94,37 @@ def get_advisor(itemname):
             self.link = link
 
 
+
+        def get_inf_sooq_phone(self):
+            self.temp = []
+            self.temp_price = []
+            self.temp_img = []
+            self.target = requests.get(self.link).text
+            self.target_name = BeautifulSoup(self.target,'html5lib').findAll("h1", {"class":"itemTitle"})
+            self.target_price = BeautifulSoup(self.target,'html5lib').findAll("h3", {"class":"itemPrice"})
+            self.target_img = BeautifulSoup(self.target,'html5lib').findAll("img", {"class":"img-size-medium"})
+
+            for i in range(len(self.target_name)):
+                clean_result = self.target_name[i].text
+                self.temp.append(clean_result)
+
+            for i in range(len(self.target_price)):
+                clean_result = self.target_price[i].text
+                self.temp_price.append(clean_result)
+
+            for i in range(len(self.target_img)):
+                clean_result = self.target_img[i]['data-src']
+                self.temp_img.append(clean_result)
+
+
+
+
+            for i in range(len(self.temp)):
+                self.temp[i][0].replace('\n\n\t\n \n \n \n\n','')
+            return {"item name":self.temp[0].strip('31 % off Quick View').replace('Quick View',''),"item price":self.temp_price[0],"itemimg":self.temp_img[0]}
+
+
+
         def get_inf_sooq(self):
             self.temp = []
             self.temp_price = []
@@ -121,6 +152,9 @@ def get_advisor(itemname):
             for i in range(len(self.temp)):
                 self.temp[i][0].replace('\n\n\t\n \n \n \n\n','')
             return {"item name":self.temp[0].strip('31 % off Quick View').replace('Quick View',''),"item price":self.temp_price[0],"itemimg":self.temp_img[0]}
+
+
+
 
 
 
@@ -155,7 +189,7 @@ def get_advisor(itemname):
 
             return {'item name':self.temp_name_jolly[0],'item price':self.temp_price_jolly[0],'item img':self.temp_img_jolly[0]}
 
-    class shoping_adv_noon:
+    class shoping_adv_xcite:
         def __init__(self,link):
             self.link = link
 
@@ -192,16 +226,18 @@ def get_advisor(itemname):
 
 
 
+
     try:
-        new_adv = {'sooq':shoping_adv_sooq('https://saudi.souq.com/sa-en/'+itemname+'/s/?as=1').get_inf_sooq(),"jollychic":shoping_adv_jolly('https://www.jollychic.com/s/'+itemname+'?jsort=0111-120&q='+itemname).get_inf_jolly(),'noon':shoping_adv_noon('https://www.noon.com/saudi-ar/search?q='+itemname).get_inf_noon()}
-        return {'result':new_adv}
-    except Exception as e :
         new_adv = {'sooq':shoping_adv_sooq('https://saudi.souq.com/sa-en/'+itemname+'/s/?as=1').get_inf_sooq(),"jollychic":shoping_adv_jolly('https://www.jollychic.com/s/'+itemname+'?jsort=0111-120&q='+itemname).get_inf_jolly()}
         return {'result':new_adv}
+    except Exception as e :
+        new_adv = {'sooq':shoping_adv_sooq('https://saudi.souq.com/sa-en/'+itemname+'/s/?as=1').get_inf_sooq_phone(),"jollychic":shoping_adv_jolly('https://www.jollychic.com/s/'+itemname+'?jsort=0111-120&q='+itemname).get_inf_jolly()}
+        return {'result':new_adv}
+    else:
+        return e
 
 
 
 
 if __name__ == '__main__':
     app.run(debug=True,threaded=True, port=5000)
-
