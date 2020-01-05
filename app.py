@@ -7,6 +7,8 @@ import json
 from selenium import webdriver
 import threading
 from threading import *
+import os
+
 app = Flask(__name__)
 CORS(app)
 
@@ -90,280 +92,119 @@ def get_views(username):
 
 @app.route('/item/advisor/<itemname>',methods=['GET'])
 def get_advisor(itemname):
-    class shoping_adv_sooq(Thread):
-        def __init__(self,link):
-            self.link = link
+    class collecter:
+        def __init__(self):
+
             self.headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
 
+        def crawl_sooq(self,all=bool()):
+            self.link1 = 'https://saudi.souq.com/sa-en/'+itemname+'/s/?as=1'
+            self.link2 = 'https://saudi.souq.com/sa-en/'+itemname+'/mobile-phones-33/a-t/s/'
+            def sooq(tag1,tag2,tag3,link,pt,imgkey):
+                self.tag1 = tag1
+                self.tag2 = tag2
+                self.tag3 = tag3
+                self.link = requests.get(self.link1,headers=self.headers).text
+                self.get_result = BeautifulSoup(self.link,'html5lib').find_all(tag1 , {tag2:tag3})
+                self.holder = []
+                for i in range(len(self.get_result)):
+                    self.s_img = self.get_result[i].find('img')[imgkey]
+                    self.s_name = self.get_result[i]['data-name']
+                    self.holder.append([self.s_img,self.s_name])
+                self.price = [int(i.text.split(' ')[0].replace(',','').split('.')[0]) for i in BeautifulSoup(self.link,'html5lib').find_all(pt,{'class':'itemPrice'})]
+                return {"item name":self.holder[0][1],"item img":self.holder[0][0],"item price":self.price[0]}
 
-
-        def get_inf_sooq_phone(self):
-            self.temp = []
-            self.temp_price = []
-            self.temp_img = []
-            self.target = requests.get(self.link,headers=self.headers).text
-            self.target_name = BeautifulSoup(self.target,'html5lib').findAll("h1", {"class":"itemTitle"})
-            self.target_price = BeautifulSoup(self.target,'html5lib').findAll("h3", {"class":"itemPrice"})
-            self.target_img = BeautifulSoup(self.target,'html5lib').findAll("img", {"class":"img-size-medium"})
-            self.t1 = threading.Thread(target=self.target_name)
-            self.t2 = threading.Thread(target=self.target_price)
-            self.t3 = threading.Thread(target=self.target_img)
-            self.t1.start()
-            self.t2.start()
-            self.t3.start()
-
-
-            for i in range(len(self.target_name)):
-                clean_result = self.target_name[i].text
-                self.temp.append(clean_result)
-
-            for i in range(len(self.target_price)):
-                clean_result = self.target_price[i].text
-                self.temp_price.append(clean_result)
-
-            for i in range(len(self.target_img)):
-                clean_result = self.target_img[i]['data-src']
-                self.temp_img.append(clean_result)
+            try :
+                return sooq('div','class','column column-block block-list-large single-item',self.link2,'h3','data-src')
+            except :
+                 return sooq('div','class','column column-block block-grid-large single-item',self.link1,'span','src')
 
 
 
 
-            for i in range(len(self.temp)):
-                self.temp[i][0].replace('\n\n\t\n \n \n \n\n','')
-
-            self.t1.join()
-            self.t2.join()
-            self.t3.join()
-            try:
-                return {"item name":self.temp[0].strip('31 % off Quick View').replace('Quick View',''),"item price":self.temp_price[0],"itemimg":self.temp_img}
-            except Exception as e :
-                return {"item name":" Try another word ","item price":"Try another word ","itemimg":" Try another word "}
-
-        def get_inf_sooq_phone_2(self):
-            self.temp = []
-            self.temp_price = []
-            self.temp_img = []
-            self.target = requests.get(self.link,headers=self.headers).text
-            self.target_name = BeautifulSoup(self.target,'html5lib').findAll("h1", {"class":"itemTitle"})
-            self.target_price = BeautifulSoup(self.target,'html5lib').findAll("h3", {"class":"itemPrice"})
-            self.target_img = BeautifulSoup(self.target,'html5lib').findAll("div", {"class":"col col-image relative discount-wrap"})
-            self.t1 = threading.Thread(target=self.target_name)
-            self.t2 = threading.Thread(target=self.target_price)
-            self.t3 = threading.Thread(target=self.target_img)
-            self.t1.start()
-            self.t2.start()
-            self.t3.start()
+        def crawl_jarrer(self,all=bool()):
+            self.link1 = 'https://www.jarir.com/sa-en/catalogsearch/result/?order=priority&dir=asc&q='+itemname
 
 
-            for i in range(len(self.target_name)):
-                clean_result = self.target_name[i].text
-                self.temp.append(clean_result)
+            def jarrer(tag1,tag2,tag3,link,pt,imgkey):
+                self.tag1 = tag1
+                self.tag2 = tag2
+                self.tag3 = tag3
+                self.link = requests.get(self.link1,headers=self.headers).text
+                self.get_result = BeautifulSoup(self.link,'html5lib').find_all(tag1 , {tag2:tag3})
+                self.get_result_price = BeautifulSoup(self.link,'html5lib').find_all('div' , {'class':'price'})
 
-            for i in range(len(self.target_price)):
-                clean_result = self.target_price[i].text
-                self.temp_price.append(clean_result)
-
-            for i in range(len(self.target_img)):
-                clean_result = self.target_img[i].find('img')
-                self.temp_img.append(clean_result['data-src'])
+                try:
+                    self.price = [int(self.get_result_price[i].text.replace('SR','').split(' ')[0].split(' ')[0]) for i in range(len(self.get_result_price))]
+                except:
+                    self.price = [int(self.get_result_price[i].text.replace('SR','').split(' ')[0].strip(self.get_result_price[i].text[0]).split('.')[0]) for i in range(len(self.get_result_price))]
 
 
+                self.name = [ self.get_result[i].find('a')['title'] for i in range(len(self.get_result))]
+                self.img = [self.get_result[i].find('img',{"class":"lazyload"})['data-src'] for i in range(len(self.get_result))]
+
+                self.data = [self.name,self.img]
 
 
-            for i in range(len(self.temp)):
-                self.temp[i].replace('\n\n\t\n \n \n \n\n','')
-                self.t1.join()
-                self.t2.join()
-                self.t3.join()
+                return {"item name":self.data[0][0],"item img":self.data[1][0],"itme price":self.price[0]}
+
 
             try:
-                return {"item name":self.temp[0],"item price":self.temp_price[0],"itemimg":self.temp_img[0]}
+                return jarrer('li','class','item last',self.link1,'div','data-src')
             except Exception as e :
-                return {"x":'null'}
+                return jarrer('li','class','item last',self.link1,'div',"")
+
+
+        def crawl_noon(self,all=bool()):
+            self.link1 = 'https://www.noon.com/saudi-ar/search?q='+itemname
+            self.session = requests.Session()
+
+            def noon(tag1,tag2,tag3,link,pt,imgkey):
+                self.tag1 = tag1
+                self.tag2 = tag2
+                self.tag3 = tag3
+                self.link_r = self.session.get(self.link1,headers=self.headers)
+                self.link = requests.get(self.link1,headers=self.headers).text
+                self.get_result = BeautifulSoup(self.link,'html5lib').find_all(tag1 , {tag2:tag3})
+                self.name = [self.get_result[i].find(pt ,{'class':"jsx-1833788615 name"}).text for i in range(len(self.get_result))]
+                self.price = [int(self.get_result[i].find('span',{'class':'jsx-4251264678 sellingPrice'}).text.strip('ر.س.‏').split(' ')[0].split('.')[0]) for i in range(len(self.get_result))]
+                self.im = BeautifulSoup(self.link,'html5lib').find_all('a',{'class':'jsx-1833788615 product'})
+
+                return {"item name":self.name[0],"item price":self.price[0],'item img':[self.im[i]['href'] for i in range(len(self.im))][0]}
 
 
 
-        def get_inf_sooq(self):
-            self.temp = []
-            self.temp_price = []
-            self.temp_img = []
-            self.target = requests.get(self.link,headers=self.headers).text
-            self.target_name = BeautifulSoup(self.target,'html5lib').findAll("h1", {"class":"itemTitle"})
-            self.target_price = BeautifulSoup(self.target,'html5lib').findAll("h3", {"class":"itemPrice"})
-            self.target_img = BeautifulSoup(self.target,'html5lib').findAll("img", {"class":"img-size-medium"})
-            self.t1 = threading.Thread(target=self.target_name)
-            self.t2 = threading.Thread(target=self.target_price)
-            self.t3 = threading.Thread(target=self.target_img)
-            self.t1.start()
-            self.t2.start()
-            self.t3.start()
-
-
-            for i in range(len(self.target_name)):
-                clean_result = self.target_name[i].text
-                self.temp.append(clean_result)
-
-            for i in range(len(self.target_price)):
-                clean_result = self.target_price[i].text
-                self.temp_price.append(clean_result)
-
-            for i in range(len(self.target_img)):
-                clean_result = self.target_img[i]['src']
-                self.temp_img.append(clean_result)
-
-
-
-
-            for i in range(len(self.temp)):
-                self.temp[i][0].replace('\n\n\t\n \n \n \n\n','')
-                self.t1.join()
-                self.t2.join()
-                self.t3.join()
 
             try:
-                return {"item name":self.temp[0].strip('31 % off Quick View').replace('Quick View',''),"item price":self.temp_price[0],"itemimg":self.temp_img[0]}
-            except Exception as e :
-                return {"item name":self.temp,"item price":self.temp_price,"itemimg":self.temp_img}
-            finally:
-                pass
+                return noon('div','class','jsx-1833788615 detailsContainer',self.link1,'p','data-src')
+            except :
+                return noon('div','class','jsx-1833788615 detailsContainer',self.link1,'div','data-src')
 
 
 
 
-
-    class shoping_adv_jolly(Thread):
-        def __init__(self,link):
-            self.link = link
-            self.headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
-        def get_inf_jolly(self):
-            self.temp_name_jolly = []
-            self.temp_price_jolly = []
-            self.temp_img_jolly = []
-            self.target = requests.get(self.link,headers=self.headers).text
-            self.jolly_name = BeautifulSoup(self.target,'html5lib').find_all("h4" , {"class":"pro_list_msg_1"})
-            self.jolly_price = BeautifulSoup(self.target,'html5lib').find_all("div" , {"class":"pro_list_price_1 categoryTwo-loveBox"})
-            self.jolly_img = BeautifulSoup(self.target,'html5lib').find_all("img" , {"class":"J-lazy-load firstImg"})
-            self.t1 = threading.Thread(target=self.jolly_name)
-            self.t2 = threading.Thread(target=self.jolly_price)
-            self.t3 = threading.Thread(target=self.jolly_img)
-            self.t1.start()
-            self.t2.start()
-            self.t3.start()
+        def crawl_extra(self,all=bool()):
+            self.link1 = 'https://www.extra.com/en-sa/search/?text='+itemname
 
 
-            for i in range(len(self.jolly_name)):
-                clean_result = self.jolly_name[i].text
-                self.temp_name_jolly.append(clean_result)
+            def extra(tag1,tag2,tag3,link,pt,imgkey):
+                self.tag1 = tag1
+                self.tag2 = tag2
+                self.tag3 = tag3
+                self.link = requests.get(self.link1,headers=self.headers).text
+                self.get_result = BeautifulSoup(self.link,'html5lib').find_all(tag1 , {tag2:tag3})
+                self.name = [ self.get_result[i]['data-name'] for i in range(len(self.get_result))]
+                self.price = [int(self.get_result[i]['data-price']) for i in range(len(self.get_result))]
+                self.img = [self.get_result[i]['data-imageurl'] for i in range(len(self.get_result))]
 
-            for i in range(len(self.jolly_price)):
-                clean_result = self.jolly_price[i].text
-                self.temp_price_jolly.append(clean_result)
-
-
-            for i in range(len(self.jolly_img)):
-                clean_result = self.jolly_img[i]['data-original']
-                self.temp_img_jolly.append(clean_result)
-            self.t1.join()
-            self.t2.join()
-            self.t3.join()
-
-            try:
-                return {'item name':self.temp_name_jolly[0],'item price':self.temp_price_jolly[0],'item img':self.temp_img_jolly[0]}
-            except Exception as e :
-                pass
-    class shoping_adv_extra(Thread):
-        def __init__(self,link):
-            self.link = link
-            self.headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
+                return {"item name":self.name[0],"item price":self.price[0],"item img":self.img[0]}
 
 
-        def get_inf_extra(self):
-            self.name_holder_extra = []
-            self.price_holder_extra = []
-            self.img_holder_extra = []
-            self.target = requests.get(self.link,headers=self.headers).text
-            self.extra_name = BeautifulSoup(self.target,'html5lib').find_all("div" , {"class":"title"})
-            self.extra_price = BeautifulSoup(self.target,'html5lib').find_all("div" , {"class":"c_product-price-current"})
-            self.extra_img = BeautifulSoup(self.target,'html5lib').findAll("div", {"class":"image-container"})
-            self.t1 = threading.Thread(target=self.extra_name)
-            self.t2 = threading.Thread(target=self.extra_price)
-            self.t3 = threading.Thread(target=self.extra_img)
-            self.t1.start()
-            self.t2.start()
-            self.t3.start()
-            for i in range((len(self.extra_name))):
-                clean_r = self.extra_name[i].text
-                self.name_holder_extra.append(clean_r)
 
 
-            for i in range(len(self.extra_price)):
-                clean_price = self.extra_price[i].text
-                self.price_holder_extra.append(clean_price)
+            return extra('div','class','c_product-tile js-product-tile js-gtm-button',self.link1,'div','data-src')
 
-            for i in range(len(self.extra_img)):
-                clean_result = self.extra_img[i].find('source')['srcset']
-                self.img_holder_extra.append(clean_result)
-
-            self.t1.join()
-            self.t2.join()
-            self.t3.join()
-            try:
-                return {"item name":self.name_holder_extra[0],"item price":self.price_holder_extra[0],"itemimg":self.img_holder_extra[0]}
-            except Exception as e :
-                return {"item name":"item not found","item price":"item not found","itemimg":"item not found"}
-    class shoping_adv_jareer(Thread):
-        def __init__(self,link):
-            self.link = link
-            self.headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
-
-
-        def get_inf_jarrer(self):
-            self.name_holder_jarrer = []
-            self.price_holder_jarrer = []
-            self.img_holder_jarrer = []
-            self.target = requests.get(self.link,headers=self.headers).text
-            self.jareer_name = BeautifulSoup(self.target,'html5lib').find_all("h3" , {"class":"product-name"})
-            self.jareer_price = BeautifulSoup(self.target,'html5lib').find_all("div" , {"class":"price"})
-            self.jareer_img = BeautifulSoup(self.target,'html5lib').find_all("li",{"class":"item"})
-            self.t1 = threading.Thread(target=self.jareer_name)
-            self.t2 = threading.Thread(target=self.jareer_price)
-            self.t3 = threading.Thread(target=self.jareer_img)
-            self.t1.start()
-            self.t2.start()
-            self.t3.start()
-
-            for i in range((len(self.jareer_name))):
-                clean_r = self.jareer_name[i].text
-                self.name_holder_jarrer.append(clean_r)
-
-            for i in range(len(self.jareer_price)):
-                clean_price = self.jareer_price[i].text
-                self.price_holder_jarrer.append(clean_price)
-
-            for i in range(len(self.jareer_img)):
-                cleanSrc = self.jareer_img[i].find_all("img",{"class":"lazyload"})
-                self.img_holder_jarrer.append(cleanSrc[0]['data-src'])
-            self.t1.join()
-            self.t2.join()
-            self.t3.join()
-            try:
-                return {"item name":self.name_holder_jarrer[0],"item price":self.price_holder_jarrer[0],"itemimg":self.img_holder_jarrer[0]}
-            except Exception as e :
-                pass
-
-
-    try:
-        itemname = itemname.replace(' ','-')
-        new_adv = {"sooq":shoping_adv_sooq('https://saudi.souq.com/sa-en/'+itemname+'/s/?as=1').get_inf_sooq_phone(),"jollychic":shoping_adv_jolly('https://www.jollychic.com/s/'+itemname+'?jsort=0111-120&q='+itemname).get_inf_jolly(),"extra":shoping_adv_extra('https://www.extra.com/en-sa/search/?text='+itemname).get_inf_extra(),"jareer":shoping_adv_jareer('https://www.jarir.com/sa-en/catalogsearch/result/?order=priority&dir=asc&q='+itemname).get_inf_jarrer()}
-        return {'result':new_adv}
-    except :
-        itemname = itemname.replace(' ','-')
-        new_adv = {"sooq":shoping_adv_sooq('https://saudi.souq.com/sa-en/'+itemname+'/mobile-phones-33/a-t/s/').get_inf_sooq_phone_2(),"jollychic":shoping_adv_jolly('https://www.jollychic.com/s/'+itemname+'?jsort=0111-120&q='+itemname).get_inf_jolly(),"extra":shoping_adv_extra('https://www.extra.com/en-sa/search/?text='+itemname).get_inf_extra(),"jareer":shoping_adv_jareer('https://www.jarir.com/sa-en/catalogsearch/result/?order=priority&dir=asc&q='+itemname).get_inf_jarrer()}
-        return {'result':new_adv}
-    finally:
-        itemname = itemname.replace(' ','-')
-        new_adv = {"sooq":shoping_adv_sooq('https://saudi.souq.com/sa-en/'+itemname+'/s/?as=1').get_inf_sooq(),"jollychic":shoping_adv_jolly('https://www.jollychic.com/s/'+itemname+'?jsort=0111-120&q='+itemname).get_inf_jolly(),"extra":shoping_adv_extra('https://www.extra.com/en-sa/search/?text='+itemname).get_inf_extra(),"jareer":shoping_adv_jareer('https://www.jarir.com/sa-en/catalogsearch/result/?order=priority&dir=asc&q='+itemname).get_inf_jarrer()}
-        return {'result':new_adv}
+    return {'result':{'jareer':collecter().crawl_jarrer(),'sooq':collecter().crawl_sooq(),'extra':collecter().crawl_extra(),'noon':collecter().crawl_noon()}}
 
 
 
