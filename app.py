@@ -7,86 +7,8 @@ import json
 from selenium import webdriver
 import threading
 from threading import *
-import os
-
 app = Flask(__name__)
 CORS(app)
-
-
-
-@app.route('/',methods=['GET'])
-def hello():
-    return jsonify({"hello":"Hello moe"})
-
-
-@app.route('/home',methods=['GET'])
-def landepage():
-    users = []
-    views = []
-    sorted_resp = {}
-    lookup = requests.get('http://dhubs.herokuapp.com/database').text
-    result = BeautifulSoup(lookup,'html5lib')
-    result = result.prettify().strip(result.prettify()[1:30])
-    result = json.dumps(result,ensure_ascii=False,sort_keys=True)
-    result = json.loads(result)
-    with open('res.json','w') as e :
-        e.write(result)
-    with open('res.json','r') as json_file:
-        data = json.load(json_file)
-        for i in data['posts'] :
-            users.append(i['username'])
-            views.append(len(i['Views']))
-    full_resp = list(zip(users,views))
-    sorted_by_second = sorted(full_resp, key=lambda tup: tup[1],reverse=True)
-    sorted_resp['res'] = []
-    for i in sorted_by_second :
-        sorted_resp['res'].append({'name':i[0],'views':i[1]})
-
-
-    return sorted_resp
-
-@app.route('/say',methods=['POST'])
-def hellos():
-
-    name = request.json['name']
-    students = {'ahme':20,'majed':2,'abood':3}
-    for i in students.keys() :
-        if i == name :
-            print(i,students[i])
-            if students[i] == 0 :
-                return jsonify({"hello":f'hello {i} your score is {students[i]}'})
-            else:
-                return jsonify({"hello":f'hello {i} your score is {students[i]}'})
-    else:
-        return jsonify({"Error":"User name not Found"})
-
-@app.route('/views/count/<username>',methods=['GET'])
-def get_views(username):
-    users = []
-    views = []
-    view_name = []
-    sorted_resp = {}
-    resp_reduce = {}
-    lookup = requests.get(f'http://dhubs.herokuapp.com/shop/{username}').text
-    result = BeautifulSoup(lookup,'html5lib')
-    result = result.prettify().strip(result.prettify()[1:30])
-    result = json.dumps(result,ensure_ascii=False,sort_keys=True)
-    result = json.loads(result)
-    with open(f'{username}.json','w') as e :
-        e.write(result)
-    with open(f'{username}.json','r') as json_file:
-        data = json.load(json_file)
-        for i in data :
-            views.append(i['Views'])
-
-    for i in views[0]:
-        view_name.append(i['itemname'])
-
-    my_dict = {i:view_name.count(i) for i in view_name}
-    print(my_dict)
-
-
-    return my_dict
 
 
 
@@ -207,12 +129,5 @@ def get_advisor(itemname):
     return {'result':{'jareer':collecter().crawl_jarrer(),'sooq':collecter().crawl_sooq(),'extra':collecter().crawl_extra(),'noon':collecter().crawl_noon()}}
 
 
-
-
-
-
-
-
-
 if __name__ == '__main__':
-    app.run(debug=True,threaded=True, port=5000)
+    app.run(debug=True,threaded=True, port=5001)
