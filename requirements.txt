@@ -12,7 +12,7 @@ chardet==3.0.4
 Click==7.0
 cypari==2.3.0
 decorator==4.4.1
-Django==2.2.6
+Django==2.2.21
 dnspython==1.16.0
 Eel==0.9.7
 entrypoints==0.3
