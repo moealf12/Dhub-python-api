@@ -52,7 +52,7 @@ opencv-python==4.1.1.26
 parso==0.5.1
 pexpect==4.7.0
 pickleshare==0.7.5
-Pillow==6.2.1
+Pillow==8.3.2
 plink==2.3
 pluggy==0.13.0
 prompt-toolkit==3.0.2
